@@ -1,10 +1,11 @@
 
 method = 'NMF';  
 P =50;
+Klatent = 1;
 stdnmf =  'y'
 EXPERIMENTO = 'interp_1';
 Ninit = 1;
-normW = 'n';
+normW = 'y';
 LOCATIONS = {'ME','NH','VT','CT','RI','SEMASS','WCMASS','NEMASSBOST'};
 sigma = 1;   %  For initializations
 project_path = 'C:\Users\mahom\Documents\GitHub\NMFinterpretable';
@@ -21,7 +22,14 @@ for l=1:8
     %=========================================
     [IndexHolidays,HolidaysDates] = FindFederalHolidays(Dates);
     IndexWeekday = weekday(datetime(Dates,'Locale','en_US'));
-
+    IndexDayYear = day(datetime(Dates),'dayofyear');
+    YearIndex = year(datetime(Dates))-min(year(datetime(Dates))) +1;
+    %=========================================
+    mfy = mask_dayyear(IndexDayYear);
+    mh = mask_holidays(IndexHolidays);
+    mw = mask_week(IndexWeekday);
+    my = mask_year(YearIndex);
+    M = [mfy;mw;my];
     %=========================================
     %=========================================
     Load = Load(:,:)';
@@ -34,23 +42,18 @@ for l=1:8
     N= size(Load,2);
 
     threshold_err = 1e-4;
-    threshold_nlp = 1e-2;
-    thresholdC = 1e-4;
-    threshold_i = 1e-4;
  
-
-
     ParametersNMF = struct('threshold',threshold_err);
     % NMF =================================  
     if strcmpi(method,'NMF')
         
-       [IndexH,Holidays] = FindFederalHolidays(Dates);
-       [WEEKDAY_num,WEEKDAY_name] = weekday(Dates);
-       WEEKEND_OR_NOT = isweekend(datetime(Dates));
-       [~,~,indexYear] = unique(year(Dates)); 
+
+       %[IndexH,Holidays] = FindFederalHolidays(Dates);
+       %[WEEKDAY_num,WEEKDAY_name] = weekday(Dates);
+       %WEEKEND_OR_NOT = isweekend(datetime(Dates));
+       %[~,~,indexYear] = unique(year(Dates)); 
        % Load  = [Load;IndexH';double(DoY);WEEKEND_OR_NOT';WEEKDAY_num'];
-        
-       %Load = Load -(min(min(Load)) -1e-6);
+
        tic 
        if stdnmf == 'y'
             [Load_std,Stds_train_load] = NormalizationNMF(Load);
@@ -62,8 +65,10 @@ for l=1:8
             Load_p = Load;    
             TemperatureNN_p = TemperatureNN;
        end
-   
-   
+       K = size(M,1) + Klatent;
+       [Wini,Hini] = InitializeNMF(Load_p,F,N,K,'als',Ninit,normW,sigma);
+       Hini = Hini.*[M; ones(Klatent,N)];
+       [Wload_opt,Hload_opt,err,iteration] = NMF(Load_p, Wini, Hini , 1e-5,0,normW);
 
        RESULTS.Wload_opt = Wload_opt;
        RESULTS.Hload_opt = Hload_opt; 
@@ -110,29 +115,6 @@ for l=1:8
         
 end
        
-       
-
-    if strcmpi(method,'NMF_fixed_SigmaF_covX')
-        % NMF  fixed SigmaF====================
-         tic
-         Parameters.threshold_nlp = threshold_nlp; % NLLdiff = 100*abs(NLL2-NLL)/abs(NLL2);
-         Parameters.threshold_err = threshold_err; % err = 100*norm(X-W*H,'fro')/norm(X,'fro');
-         Parameters.SigmaF = cov(Load');
-
-         [Wload_opt,Hload_opt,ValidationLoad] = ValidationNMF(Load,Kmax,method,P,Parameters);
-         Kopt = size(Wload_opt,2);
-         Wini = 0.1*rand(F,Kopt);
-         Hini = 0.1*rand(Kopt,N);
-         [Wini,Hini,~,~] = NMF(Load, Wini, Hini , threshold_err);
-         [Wload,Hload] = CorrelatedNMF_ori(Load,Kopt,SigmaF,Wini,Hini,threshold)
-         %[Wtemperature,Htemperature,ValidationTemperature] = ValidationNMF(Temperature,Kmax,method,P,Parameters);
-         %[Wdew,Hdew,ValidationDew] = ValidationNMF(Dew,Kmax,method,P,Parameters);
-         time = toc;
-         disp(['Duracion:   '   num2str(time)]);
-
-         
-    end
-
      %% SAVE MODELS
       file = ['Validation_' location '_' method '_std_' stdnmf '_EXP_' EXPERIMENTO  '.mat'];
       save([project_path '\Data\Exp_' EXPERIMENTO  '\' method '\' file ],'RESULTS');
