@@ -4,8 +4,8 @@ N = length(index_holidays);
 H = max(index_holidays);
 Mask = zeros(H,N);
 
-for hd=1:H
-    Mask(hd,index_yearday==hd) = 1;
+for hd=1:N
+    Mask(hd,index_holidays==hd) = 1;
 end
 
 end
