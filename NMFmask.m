@@ -1,4 +1,4 @@
-function [W,H,err,iteration] = NMF(X, Wini, Hini ,Hmask ,threshold,verbose,normW,varargin)
+function [W,H,err,iteration] = NMFmask(X, Wini, Hini ,Hmask ,threshold,verbose,normW,varargin)
 % X = F times N
 % W = F times K
 % H = K times N
@@ -57,7 +57,7 @@ while  errdif > threshold &&  x<5e2
     
     err = 100*norm(X-Xp,'fro')/norm(X,'fro');
     if x>1
-        errdif = errp - err;
+        errdif = abs(errp - err);
         errp = err;
     else
         errp = err;
