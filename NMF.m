@@ -13,7 +13,7 @@ flag_fixedH = 0;
 affine = 'n'; % If 'y', the algorithms assumes a DC component that is substracted to reduce invariant solutions.
 aini = rand(size(X,1),1);
 %while err>threshold && errdif > 1e-3 && x<1e7   
-while  errdif > threshold &&  x<5e2
+while  errdif > threshold &&  x<1e4
     if x ==1
         H = Hini;
         W = Wini;
