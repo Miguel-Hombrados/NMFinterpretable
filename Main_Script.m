@@ -3,7 +3,7 @@ method = 'NMFmask';
 P =50;
 Klatent = 1;
 stdnmf =  'y'
-EXPERIMENTO = 'interp_1';
+EXPERIMENTO = 'interp_1_2';
 Ninit = 1;
 normW = 'y';
 option = 'als';
@@ -15,28 +15,13 @@ for l=1:8
 
     location = LOCATIONS{l};
     %filename = ['DATA_Train_Val_' location '.mat'];
-    filename = ['DATA_Train_Val_' location '.mat'];
+    filename = ['DATA_Train_Val_11_18_' location '.mat'];
    
 
-    [Load,Temperature,Dew,Dates,WeekDay,DoY] = Load_ISONE_PythonData_full([ project_path '\Data\Preprocessed\' filename]);
+    [Load,Temperature,Dew,Dates,WeekDay,DoY] = Load_ISONE_PythonData_full([ project_path '\Data\Exp_interp_1\Preprocessed\' filename]);
     %=========================================
     %=========================================
-    [IndexHolidays,HolidaysDates] = FindFederalHolidays(Dates);
-    IndexWeekday = weekday(datetime(Dates,'Locale','en_US'));
-    IndexDayYear = day(datetime(Dates),'dayofyear');
-    YearIndex = year(datetime(Dates))-min(year(datetime(Dates))) +1;
-    IndexWeekOfYearIndex = weeknum(datetime(Dates));
-    %=========================================
-    mfy = mask_dayyear(IndexDayYear);
-    mh = mask_holidays(IndexHolidays);
-    mw = mask_week(IndexWeekday);
-    my = mask_year(YearIndex);
-    wy = mask_weekyear(IndexWeekOfYearIndex);
-    M1 = [mfy;mw;my;double(IndexHolidays');wy];
-    M2 = [mw;my;double(IndexHolidays');wy];
-    M3 = [mfy;mw;my;double(IndexHolidays')];
-    M4 = [mfy;mw;double(IndexHolidays');wy];
-    M = M1;
+    [Mask,Template] = CreateSparseMask(Dates,option);
     %=========================================
     %=========================================
 
@@ -145,6 +130,6 @@ end
   %% SAVE MODELS
       description = ['EXP' num2str(EXPERIMENTO) '_' location '_met' method '_std' stdnmf  '_Thr_' num2str(threshold_err) '_NbOfIni(P)_' num2str(P) '_Ninit_' num2str(Ninit)  '_normW_'  normW '_K_'  num2str(K)];
       file = ['NMF_mask_' description  '.mat'];
-      save([project_path '\Data\Exp_' EXPERIMENTO  '\' file ],'RESULTS');
+      save([project_path '\Data\Exp_interp_1\Exp_' EXPERIMENTO  '\' file ],'RESULTS');
 end
 end
