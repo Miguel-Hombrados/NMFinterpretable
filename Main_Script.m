@@ -21,11 +21,7 @@ for l=1:8
     [Load,Temperature,Dew,Dates,WeekDay,DoY] = Load_ISONE_PythonData_full([ project_path '\Data\Exp_interp_1\Preprocessed\' filename]);
     %=========================================
     %=========================================
-    [Mask,Template] = CreateSparseMask(Dates,option);
-    %=========================================
-    %=========================================
-
-    
+    [Mask,Template] = CreateSparseMask(Dates,'1');
     %=========================================
     %=========================================
     Load = Load(:,:)';
@@ -42,34 +38,26 @@ for l=1:8
     ParametersNMF = struct('threshold',threshold_err);
     % NMF =================================  
     if strcmpi(method,'NMFmask')
-        
-
-       %[IndexH,Holidays] = FindFederalHolidays(Dates);
-       %[WEEKDAY_num,WEEKDAY_name] = weekday(Dates);
-       %WEEKEND_OR_NOT = isweekend(datetime(Dates));
-       %[~,~,indexYear] = unique(year(Dates)); 
-       % Load  = [Load;IndexH';double(DoY);WEEKEND_OR_NOT';WEEKDAY_num'];
-
        tic 
        if stdnmf == 'y'
             [Load_std,Stds_train_load] = NormalizationNMF(Load);
             Load_p = Load_std;
-            
-            %[TemperatureNN_std,Stds_train_TemperatureNN] = NormalizationNMF(TemperatureNN);
-            %TemperatureNN_p = TemperatureNN_std;           
+   
        if stdnmf == 'n'
             Load_p = Load;    
             TemperatureNN_p = TemperatureNN;
             Stds_train_load = ones(F,1);
        end
-       K = size(M,1) + Klatent;
+       K = size(Mask,1) + Klatent;
        tic
        [Wini,Hini] = InitializeNMF(Load_p,F,N,K,option,Ninit,normW,sigma);
-       Hini_mask = Hini.*[M; ones(Klatent,N)];
+       Hini_mask = Hini.*[Mask; ones(Klatent,N)];
        [Wload_opt,Hload_opt,err,iteration] = NMF(Load_p, Wini,Hini_mask , threshold_err,0,normW);
        timeNMFtrain = toc;
        
-              
+       RESULTS.Mask = Mask;
+       RESULTS.Template = Template;
+       RESULTS.Klatent = Klatent;
        RESULTS.method = method;
        RESULTS.P = num2str(P);
        RESULTS.Ninit = num2str(Ninit);
@@ -117,7 +105,6 @@ for l=1:8
         [Wini,Hini] = InitializeNMFtest(Loadtest_p,WW,F,Ntest,K,option,Ninit,normW,sigma)
         ParametersNMF.Wini = Wini;
         ParametersNMF.Hini = Hini;
-        %WW = Wload_opt(:,1:end-1);
  
         [~,Hload_test,errlike] = solveNMF(Loadtest_p,K,method,'W',WW,normW,ParametersNMF);
         Errorper_rec_test = 100*mean(vecnorm(repmat(Stds_train_load,1,Ntest).*(Wload_opt*Hload_test)-Loadtest,2)./vecnorm(Loadtest,2));
@@ -126,7 +113,6 @@ for l=1:8
         
 end
        
-     %% SAVE MODELS
   %% SAVE MODELS
       description = ['EXP' num2str(EXPERIMENTO) '_' location '_met' method '_std' stdnmf  '_Thr_' num2str(threshold_err) '_NbOfIni(P)_' num2str(P) '_Ninit_' num2str(Ninit)  '_normW_'  normW '_K_'  num2str(K)];
       file = ['NMF_mask_' description  '.mat'];
