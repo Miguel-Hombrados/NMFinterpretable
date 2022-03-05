@@ -21,7 +21,7 @@ for l=1:8
     [Load,Temperature,Dew,Dates,WeekDay,DoY] = Load_ISONE_PythonData_full([ project_path '\Data\Exp_interp_1\Preprocessed\' filename]);
     %=========================================
     %=========================================
-  
+    [Mask,Template] = CreateSparseMask(Dates,option);
     %=========================================
     %=========================================
 
@@ -69,7 +69,7 @@ for l=1:8
        [Wload_opt,Hload_opt,err,iteration] = NMF(Load_p, Wini,Hini_mask , threshold_err,0,normW);
        timeNMFtrain = toc;
        
-              
+       RESULTS = 
        RESULTS.method = method;
        RESULTS.P = num2str(P);
        RESULTS.Ninit = num2str(Ninit);
