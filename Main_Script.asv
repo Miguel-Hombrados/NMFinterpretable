@@ -3,11 +3,10 @@ method = 'NMFmask';
 P =50;
 Klatent = 1;
 stdnmf =  'y'
-EXPERIMENTO = 'interp_1';
+EXPERIMENTO = 'interp_1_2';
 Ninit = 1;
 normW = 'y';
 option = 'als';
-
 LOCATIONS = {'ME','NH','VT','CT','RI','SEMASS','WCMASS','NEMASSBOST'};
 sigma = 1;   %  For initializations
 project_path = 'C:\Users\mahom\Documents\GitHub\NMFinterpretable';
@@ -16,24 +15,13 @@ for l=1:8
 
     location = LOCATIONS{l};
     %filename = ['DATA_Train_Val_' location '.mat'];
-    filename = ['DATA_Train_Val_' location '.mat'];
+    filename = ['DATA_Train_Val_11_18_' location '.mat'];
    
 
-    [Load,Temperature,Dew,Dates,WeekDay,DoY] = Load_ISONE_PythonData_full([ project_path '\Data\Preprocessed\' filename]);
+    [Load,Temperature,Dew,Dates,WeekDay,DoY] = Load_ISONE_PythonData_full([ project_path '\Data\Exp_interp_1\Preprocessed\' filename]);
     %=========================================
     %=========================================
-    [IndexHolidays,HolidaysDates] = FindFederalHolidays(Dates);
-    IndexWeekday = weekday(datetime(Dates,'Locale','en_US'));
-    IndexDayYear = day(datetime(Dates),'dayofyear');
-    YearIndex = year(datetime(Dates))-min(year(datetime(Dates))) +1;
-    IndexWeekOfYearIndex = weeknum(datetime(Dates));
-    %=========================================
-    mfy = mask_dayyear(IndexDayYear);
-    mh = mask_holidays(IndexHolidays);
-    mw = mask_week(IndexWeekday);
-    my = mask_year(YearIndex);
-    wy = mask_weekyear(IndexWeekOfYearIndex);
-    M = [mfy;mw;my;double(IndexHolidays')];
+  
     %=========================================
     %=========================================
 
@@ -95,9 +83,8 @@ for l=1:8
        RESULTS.initopt = option;
        RESULTS.Loadtrain = Load;
        RESULTS.Description = ['Experiment: ' num2str(EXPERIMENTO) '_Method: ' method '_Threshold: ' num2str(threshold_err) '_NbOfInitializations(P):  ' num2str(P) '_Std:  ' num2str(stdnmf) '_Ninit: ' num2str(Ninit)  '_normW: '  normW  ' init_method: ' option ]
-       RESULTS.ValidationLoad = ValidationLoad;
        RESULTS.Loadtrain = Load;
-       RESULTS.Mask = [M; ones(Klatent,N)]
+       RESULTS.Mask = [M; ones(Klatent,N)];
        
        % Test =============================================
         filenamet = ['DATA_Test_' location '.mat'];
@@ -132,7 +119,7 @@ for l=1:8
         ParametersNMF.Hini = Hini;
         %WW = Wload_opt(:,1:end-1);
  
-        [~,Hload_test,errlike] = solveNMF(Loadtest_p,Kopt,method,'W',WW,normW,ParametersNMF);
+        [~,Hload_test,errlike] = solveNMF(Loadtest_p,K,method,'W',WW,normW,ParametersNMF);
         Errorper_rec_test = 100*mean(vecnorm(repmat(Stds_train_load,1,Ntest).*(Wload_opt*Hload_test)-Loadtest,2)./vecnorm(Loadtest,2));
         RESULTS.Errorper_rec_test= Errorper_rec_test; 
         RESULTS.Hload_test = Hload_test;
@@ -141,8 +128,8 @@ end
        
      %% SAVE MODELS
   %% SAVE MODELS
-      description = ['EXP' num2str(EXPERIMENTO) '_' location '_met' method '_std' stdnmf  '_Thr_' num2str(threshold_err) '_NbOfIni(P)_' num2str(P) '_Ninit_' num2str(Ninit)  '_normW_'  normW '_Kmax_'  num2str(Kmax) '_InvOpt_' OptionInv];
+      description = ['EXP' num2str(EXPERIMENTO) '_' location '_met' method '_std' stdnmf  '_Thr_' num2str(threshold_err) '_NbOfIni(P)_' num2str(P) '_Ninit_' num2str(Ninit)  '_normW_'  normW '_K_'  num2str(K)];
       file = ['NMF_mask_' description  '.mat'];
-      save([project_path '\Data\Exp_' EXPERIMENTO  '\' method '\' file ],'RESULTS');
+      save([project_path '\Data\Exp_interp_1\Exp_' EXPERIMENTO  '\' file ],'RESULTS');
 end
 end
