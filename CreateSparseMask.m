@@ -25,7 +25,7 @@ my = mask_year(YearIndex);
 wy = mask_weekyear(IndexWeekOfYearIndex);
 labels_woy = cellfun(@(c)['w' c],cellstr(num2str(weeknum(datetime(Dates)))),'uni',false);
 weeks_y_index = 1:1:53;
-template_woy = cellfun(@(c)['w' c],cellstr(num2str(weeks_y_index)),'uni',false);
+template_woy = cellfun(@(c)['w' c],cellstr(num2str(weeks_y_index')),'uni',false)';
 M0 = [mfy;mw;my;mholiday_ind;wy];
 
 M1 = [mfy;mw;my;double(IndexHolidays');wy];
@@ -36,22 +36,10 @@ WeekTemplate ={'Sun','Mon','Tue','Wed','Thu','Fri','Sat'};
 YearTemplate = {'2011','2012','2013','2014','2015','2016','2017'};
 
 if option == '1'
-    
-
-    
 Template0 = [template_doy,WeekTemplate,YearTemplate,template_holiday,template_woy];
-M = M1;
+Mask = M1;
 TemplateMasks = Template0;
 end
-
-M = M0;
-
-
-
-
-
-
-
 
 end
 
